@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Checklist Estratégico — Fotos Instagram & E-commerce</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+
+    <header class="header">
+      <div class="brand">CJ</div>
+      <div class="header-text">
+        <h1>Checklist Estratégico — Fotos para Instagram e E‑commerce</h1>
+        <div class="lead">Avalie suas imagens com notas de 0 a 4. A soma ajuda a priorizar melhorias.</div>
+      </div>
+    </header>
+
+    <main class="form-card" role="main">
+
+      <div class="block intro">
+        <h2>Instruções</h2>
+        <div class="lead">Marque cada item com uma nota de 0 (não) a 4 (totalmente). Cada item traz "Porque é importante" e a Fonte.</div>
+      </div>
+
+      <div class="block block-box" id="instagram-box">
+        <div class="block-box-header">
+          <h3>Instagram — Perguntas para marcar</h3>
+          <div class="label-muted">Marque de 0 a 4</div>
+        </div>
+        <div id="instagram-questions"></div>
+      </div>
+
+      <div class="block block-box" id="ecommerce-box">
+        <div class="block-box-header">
+          <h3>E‑commerce — Perguntas para marcar</h3>
+          <div class="label-muted">Marque de 0 a 4</div>
+        </div>
+        <div id="ecommerce-questions"></div>
+      </div>
+
+      <div class="block block-box" id="extras-box">
+        <div class="block-box-header">
+          <h3>Perguntas extras que aumentam conversão</h3>
+          <div class="label-muted">Marque de 0 a 4</div>
+        </div>
+        <div id="extras-questions"></div>
+      </div>
+
+    </main>
+
+    <aside class="result-card" aria-labelledby="result-title">
+      <div id="result-title" class="tier">Resultado</div>
+
+      <div class="score-row">
+        <div class="score" id="score-box">0%</div>
+        <div style="flex:1">
+          <div class="summary"><strong>Total de pontos:</strong> <span id="total-score">0</span> / <span id="max-score">0</span></div>
+          <div class="summary"><strong>Percentual:</strong> <span id="percent-score">0</span>%</div>
+        </div>
+      </div>
+
+      <div id="interpretation" class="summary">Aguardando avaliação...</div>
+
+      <div class="actions">
+        <button id="reset-btn" class="btn ghost">Resetar</button>
+        <button id="print-btn" class="btn primary">Imprimir / Salvar PDF</button>
+      </div>
+
+      <div id="pdf-progress-container" style="display:none;margin-top:12px">
+        <div class="pdf-progress">
+          <div class="shell"><div class="bar" id="pdf-progress-bar"></div></div>
+          <div class="num" id="pdf-progress-num">0%</div>
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <script src="app.js"></script>
+  <script src="print.js"></script>
+</body>
+</html>
