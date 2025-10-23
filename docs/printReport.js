@@ -92,16 +92,7 @@ function extrairHtmlParaEnvio(opts) {
 
   // Helper que “cola” título + divisor + primeiro item da seção
   function renderBlock(title, arr) {
-    if (!arr.length) {
-      return `
-        <section class="pdf-section">
-          <div class="section-cluster">
-            <h3 class="pdf-section-title">${title}</h3>
-            <div class="pdf-section-divider"></div>
-          </div>
-        </section>
-      `;
-    }
+    if (!arr.length) return ''; // NÃO renderiza seção vazia
 
     const [first, ...rest] = arr;
     return `
@@ -144,7 +135,9 @@ function extrairHtmlParaEnvio(opts) {
           font-family:Inter, "Helvetica Neue", Arial, sans-serif;
           color:var(--text); -webkit-print-color-adjust:exact; print-color-adjust:exact;
         }
-        .pdf-wrap { width:var(--page-width);max-width:100%;margin:16px auto;padding:16px 18px 30px;box-sizing:border-box; }
+        @page { size: A4; margin: 12mm; } /* estabiliza margens e previne overflow milimétrico */
+
+        .pdf-wrap { width:var(--page-width);max-width:100%;margin:16px auto;padding:16px 18px 28px;box-sizing:border-box; }
         .report-header{ margin-bottom:12px; }
         .report-title{ font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px; }
         .report-sub{ font-size:12px;color:var(--muted);margin-bottom:10px; }
@@ -166,7 +159,6 @@ function extrairHtmlParaEnvio(opts) {
         .item-desc .row{ display:flex; gap:12px; align-items:flex-start; margin-bottom:8px; }
         .item-desc .label{ flex:0 0 140px; background:var(--label-bg); padding:6px 8px; border-radius:6px; font-weight:700; color:var(--accent); font-size:13px; }
         .item-desc .value{ flex:1 1 auto; color:#122; font-size:13px; }
-        .report-footer{ margin-top:14px;border-top:1px solid rgba(6,18,28,0.06);padding-top:10px;color:var(--muted);font-size:12px;text-align:right; }
 
         .pdf-section-title {
           font-size: 22px;
@@ -189,6 +181,23 @@ function extrairHtmlParaEnvio(opts) {
           page-break-inside: avoid;
         }
 
+        /* Footer fixado e sem quebra */
+        .report-footer {
+          margin-top: 12px;
+          border-top: 1px solid rgba(6,18,28,0.06);
+          padding-top: 8px;
+          color: var(--muted);
+          font-size: 12px;
+          text-align: right;
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
+        .footer-cluster { page-break-inside: avoid; break-inside: avoid; }
+
+        /* Pequenos ajustes para não gerar página extra */
+        .items > .pdf-section:last-child { margin-bottom: 6px; }
+
         @media print {
           .pdf-section {
             break-inside: avoid;
@@ -197,6 +206,12 @@ function extrairHtmlParaEnvio(opts) {
           .pdf-section-title {
             break-after: avoid;
             page-break-after: avoid;
+          }
+          .report-footer {
+            page-break-before: avoid;
+            break-before: avoid;
+            page-break-after: avoid;
+            break-after: avoid;
           }
         }
       </style>
@@ -211,9 +226,13 @@ function extrairHtmlParaEnvio(opts) {
           <strong>Total de pontos:</strong> ${totalPoints} / ${maxPoints} —
           <strong>Percentual:</strong> ${percent}%
         </div>
-        <div class="items">${itensHtml}</div>
-        <div class="report-footer">Gerado automaticamente</div>
-      </div>
+        <div class="items">
+          ${itensHtml}
+          <div class="footer-cluster">
+            <div class="report-footer">Relatório Gerado Automaticamente por Mentor Jack Ullmann | Todos os direitos reservados.</div>
+          </div>
+        </div>
+      </div> <!-- FECHAMENTO CORRETO DO .pdf-wrap -->
     </body>
     </html>
   `;
