@@ -1,3 +1,92 @@
+function createQuestionNode(item){
+  const row = document.createElement('div');
+  row.className = 'q-row';
+  row.id = item.id;
+
+  const top = document.createElement('div');
+  top.className = 'q-top';
+
+  const left = document.createElement('div');
+  left.className = 'q-left';
+  left.innerHTML = `<div class="q-text">${item.question}</div>
+    <div class="q-explain">${item.why}</div>
+    <div style="margin-top:8px;color:var(--muted);font-size:0.9rem">Fonte: ${item.source}</div>`;
+
+  const right = document.createElement('div');
+  right.className = 'q-right';
+
+  // wrapper original
+  const wrap = document.createElement('div');
+  wrap.className = 'range-wrap';
+
+  const input = document.createElement('input');
+  input.type = 'range';
+  input.min = 0;
+  input.max = 4;
+  input.step = 1;
+  input.value = 0;
+  input.classList.add('range-control');
+  input.setAttribute('aria-label', item.question);
+
+  const trackMarks = document.createElement('div');
+  trackMarks.className = 'range-track-marks';
+  for (let i = 0; i < 5; i++){
+    const t = document.createElement('span');
+    t.className = 'tick';
+    trackMarks.appendChild(t);
+  }
+
+  const labelsDiv = document.createElement('div');
+  labelsDiv.className = 'range-labels';
+  for (let i = 0; i <= 4; i++){
+    const s = document.createElement('span');
+    s.textContent = i.toString();
+    labelsDiv.appendChild(s);
+  }
+
+  const val = document.createElement('div');
+  val.className = 'range-value';
+  val.setAttribute('aria-live', 'polite');
+  val.textContent = '0';
+
+  wrap.appendChild(input);
+  wrap.appendChild(trackMarks);
+  wrap.appendChild(labelsDiv);
+  wrap.appendChild(val);
+
+  right.appendChild(wrap);
+
+  top.appendChild(left);
+  top.appendChild(right);
+  row.appendChild(top);
+
+  input.addEventListener('input', function(e){
+    val.textContent = e.target.value;
+    calculateTotals();
+  });
+
+  enhanceRange(input);
+
+  return row;
+}
+
+
+
+function createQuestionNode(item){
+  const row = document.createElement('div');
+  row.className = 'q-row';
+  row.id = item.id;
+
+  const top = document.createElement('div');
+  top.className = 'q-top';
+
+  const left = document.createElement('div');
+  left.className = 'q-left';
+  left.innerHTML = `<div class="q-text">${item.question}</div>
+    <div class="q-explain">${item.why}</div>
+    <div style="margin-top:8px;color:var(--muted);font-size:0.9rem">Fonte: ${item.source}</div>`;
+
+}
 // app.js
 // Versão final: sliders 0-4 com mensagens motivacionais e acionáveis por faixa de percentual
 // Salve este arquivo em UTF-8 sem BOM
@@ -63,7 +152,11 @@ function createQuestionNode(item){
 
   // range wrapper com ticks, labels e value (0..4)
   const wrap = document.createElement('div');
-  wrap.className = 'range-wrap';
+wrap.className = 'range-wrap';
+	
+	// track row: centraliza a track e posiciona o range-value ao final
+const trackRow = document.createElement('div');
+trackRow.className = 'range-track-row';
 
   const input = document.createElement('input');
   input.type = 'range';
@@ -73,7 +166,15 @@ function createQuestionNode(item){
   input.value = 0;
   input.classList.add('range-control');
   input.setAttribute('aria-label', item.question);
-
+	
+	const val = document.createElement('div');
+  val.className = 'range-value';
+  val.setAttribute('aria-live', 'polite');
+  val.textContent = '0';
+	
+  wrap.appendChild(input);
+ wrap.appendChild(val);
+	
   const trackMarks = document.createElement('div');
   trackMarks.className = 'range-track-marks';
   // cria 5 ticks
@@ -91,19 +192,14 @@ function createQuestionNode(item){
     s.textContent = i.toString();
     labelsDiv.appendChild(s);
   }
-
-  const val = document.createElement('div');
-  val.className = 'range-value';
-  val.setAttribute('aria-live', 'polite');
-  val.textContent = '0';
-
+ 
   // monta a estrutura
-  wrap.appendChild(input);
+wrap.appendChild(trackRow);
   wrap.appendChild(trackMarks);
   wrap.appendChild(labelsDiv);
-  wrap.appendChild(val);
 
-  right.appendChild(wrap);
+	// anexa ao container direito
+right.appendChild(wrap);
 
   top.appendChild(left);
   top.appendChild(right);
@@ -131,17 +227,28 @@ function enhanceRange(rangeEl){
 
   function update(){
     const v = Number(rangeEl.value);
+    // atualiza value
     if(valueBox) valueBox.textContent = v;
-    labels.forEach((s, i) => {
-      s.classList.toggle('active', i === v);
-    });
+    // destaca label ativa
+    labels.forEach((s, i) => s.classList.toggle('active', i === v));
+    // opcional: reposiciona value ao lado do thumb (cálculo simples)
+    const trackRow = wrap.querySelector('.range-track-row');
+    if(trackRow && valueBox){
+      const pct = v / (Number(rangeEl.max) || 4);
+      const trackWidth = trackRow.getBoundingClientRect().width;
+      const offset = Math.round(pct * trackWidth);
+      // coloca value centrado próximo ao final do thumb, com limites
+      const left = Math.min(trackWidth - valueBox.offsetWidth/1.1, Math.max(0, offset - valueBox.offsetWidth/1.5));
+      valueBox.style.position = window.innerWidth > 420 ? 'absolute' : 'relative';
+      if(window.innerWidth > 420) valueBox.style.left = left + 'px';
+      else valueBox.style.left = '';
+    }
   }
 
-  // inicial
   update();
-  // eventos
   rangeEl.addEventListener('input', update, { passive: true });
   rangeEl.addEventListener('change', update, { passive: true });
+  window.addEventListener('resize', update);
 }
 
 
@@ -229,16 +336,39 @@ function renderInterpretation(percent, total, max){
     incentive = 'Comece pelo básico: corrija 1 problema crítico esta semana e acompanhe a diferença na confiança do cliente.';
   }
 
-  // Monta o HTML de interpretação com pontuação compacta
-  let html = `<strong>${header}</strong>`;
-  //const compactScore = `${total} / ${max} — ${percent}%`;
-  //html += `<div class="summary" style="margin-top:8px"><strong>Pontuação:</strong> ${compactScore}.</div>`;
-  html += `<div style="margin-top:25px"><strong>Próximas ações recomendadas:</strong><ul style="margin:8px 0 0 18px">`;
-  actions.forEach(a => { html += `<li>${a}</li>`; });
-  html += `</ul></div>`;
-  html += `<div style="margin-top:8px;color:var(--muted)"><em>${incentive}</em></div>`;
+  // Monta o HTML de interpretação
+  let html = `
+  <div class="item">
+    <div class="item-header">
+      <div class="item-title">Diagnóstico</div>
+    </div>
+    <div class="item-desc">${header}</div>
+  </div>
 
-  interpretationEl.innerHTML = html;
+  <div class="item">
+    <div class="item-header">
+      <div class="item-title">Ações recomendadas</div>
+    </div>
+    <div class="item-desc">
+      <ul>
+        ${actions.map(a => `<li>${a}</li>`).join('')}
+      </ul>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="item-header">
+      <div class="item-title">Incentivo</div>
+    </div>
+    <div class="item-desc">
+      <em>${incentive}</em>
+    </div>
+  </div>
+`;
+document.getElementById('interpretation').innerHTML = html;
+
+
+
 }
 
 function resetAll(){
@@ -259,8 +389,84 @@ mount(extrasItems, extrasContainer);
 // initial calc
 calculateTotals();
 
-// actions
-document.getElementById('reset-btn').addEventListener('click', resetAll);
-document.getElementById('print-btn').addEventListener('click', () => {
-  window.print();
-});
+// === Ação do botão "Imprimir / Salvar PDF" ===
+const ENDPOINT_PDF = 'https://teste-insta.vercel.app/api/gerar-pdf';
+const btn = document.getElementById('print-btn');
+
+if (btn) {
+  btn.addEventListener('click', async () => {
+    try {
+      if (typeof calculateTotals === 'function') calculateTotals();
+
+      await new Promise(r => setTimeout(r, 120));
+
+      // Ler respostas dos sliders (q-row + range-wrap)
+      let respostas = [];
+      if (typeof window.getUserAnswers === 'function') {
+        try { respostas = window.getUserAnswers(); } catch (e) { respostas = []; }
+      }
+
+      if (!Array.isArray(respostas) || respostas.length === 0) {
+        alert('Nenhum item encontrado. Verifique se as perguntas foram renderizadas corretamente.');
+        return;
+      }
+
+      // Gerar HTML a partir das respostas
+      const html = window.PrintReport && typeof window.PrintReport.extrairHtmlParaEnvio === 'function'
+        ? window.PrintReport.extrairHtmlParaEnvio({ user: 'Jackson', project: 'Checklist' })
+        : null;
+
+      if (!html) throw new Error('PrintReport indisponível');
+
+      // UI: progresso
+      const container = document.getElementById('pdf-progress-container');
+      const bar = document.getElementById('pdf-progress-bar');
+      const num = document.getElementById('pdf-progress-num');
+      if (container && bar && num) {
+        container.style.display = 'block';
+        bar.style.width = '4%';
+        num.textContent = '0%';
+        bar.style.backgroundColor = '';
+      }
+
+      const resp = await fetch(ENDPOINT_PDF, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html })
+      });
+
+      if (!resp.ok) throw new Error('Erro no servidor: ' + resp.status);
+      if (bar && num) { bar.style.width = '40%'; num.textContent = '40%'; }
+
+      const blob = await resp.blob();
+      if (bar && num) { bar.style.width = '95%'; num.textContent = '95%'; }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Checklist.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      if (bar && num) { bar.style.width = '100%'; num.textContent = '100%'; }
+      setTimeout(() => { if (container) container.style.display = 'none'; }, 800);
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err);
+      alert('Erro ao gerar PDF. Veja o console para detalhes.');
+    }
+  });
+}
+
+// === Função para coletar respostas dos sliders ===
+function getUserAnswers() {
+  const rows = document.querySelectorAll('.q-row');
+  return Array.from(rows).map(row => {
+    const id = row.id;
+    const input = row.querySelector('input[type="range"]');
+    const score = input ? Number(input.value) : 0;
+    return { id, score };
+  });
+}
+window.getUserAnswers = getUserAnswers;
