@@ -65,24 +65,13 @@
       <div id="interpretation" class="summary">Aguardando avaliação...</div>
 
       <div class="actions">
-        <button id="reset-btn" class="btn ghost">Resetar</button>
-        <button id="print-btn" class="btn primary">Imprimir / Salvar PDF</button>
-      </div>
-<div id="progress-container" style="display:none; margin-top:10px;">
-  <div id="progress-bar" style="
-    width: 0%;
-    height: 8px;
-    background-color: #4CAF50;
-    transition: width 0.4s ease;
-  "></div>
-</div>
+         <button id="print-btn" class="btn primary btn-lg">Salvar PDF</button>
+         <button id="reset-btn" class="btn ghost btn-lg">Resetar</button></div>
 
-      <div id="pdf-progress-container" style="display:none;margin-top:12px">
-        <div class="pdf-progress">
-          <div class="shell"><div class="bar" id="pdf-progress-bar"></div></div>
-          <div class="num" id="pdf-progress-num">0%</div>
-        </div>
-      </div>
+         <div class="progress-container" id="pdf-progress-container">
+  <div class="progress-shell">
+    <div class="progress-bar" id="pdf-progress-bar"></div></div>
+  <span class="progress-num" id="pdf-progress-num">0%</span>
 
     </aside>
 

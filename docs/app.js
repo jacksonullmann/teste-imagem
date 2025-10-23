@@ -371,14 +371,14 @@ document.getElementById('interpretation').innerHTML = html;
 
 }
 
-function resetAll(){
+function resetAll() {
   document.querySelectorAll('.q-row input[type="range"]').forEach(r => {
     r.value = 0;
     const parent = r.closest('.q-row');
-    const val = parent.querySelector('.range-value');
-    if(val) val.textContent = '0';
+    const val = parent && parent.querySelector('.range-value');
+    if (val) val.textContent = '0';
   });
-  calculateTotals();
+  if (typeof calculateTotals === 'function') calculateTotals();
 }
 
 // mount
@@ -387,20 +387,127 @@ mount(ecommerceItems, ecommerceContainer);
 mount(extrasItems, extrasContainer);
 
 // initial calc
-calculateTotals();
+if (typeof calculateTotals === 'function') calculateTotals();
 
 // === Ação do botão "Imprimir / Salvar PDF" ===
 const ENDPOINT_PDF = 'https://teste-insta.vercel.app/api/gerar-pdf';
 const btn = document.getElementById('print-btn');
 
+// API de progresso (defina uma vez no arquivo)
+// API de progresso (defina uma vez no arquivo)
+(function () {
+  function ensure() {
+    let container = document.querySelector('.progress-container');
+    if (!container) {
+      const html = `
+  <div class="progress-container" id="pdf-progress-container">
+    <div class="progress-shell">
+      <div class="progress-bar"></div>
+    </div>
+    <span class="progress-num">0%</span>
+  </div>`;
+      (document.querySelector('.actions') || document.querySelector('#print-btn')?.parentElement || document.body)
+        .insertAdjacentHTML('afterend', html);
+      container = document.querySelector('.progress-container');
+    }
+    Array.from(document.querySelectorAll('.progress-container')).slice(1).forEach(el => el.remove());
+    return {
+      container,
+      shell: container.querySelector('.progress-shell'),
+      bar: container.querySelector('.progress-bar'),
+      num: container.querySelector('.progress-num')
+    };
+  }
+
+  function normalize(prog) {
+    if (!prog || !prog.shell || !prog.bar) return;
+    prog.shell.style.display = 'block';
+    prog.shell.style.width = '100%';
+    prog.shell.style.height = '12px';               // altura adequada para "pill"
+    prog.shell.style.borderRadius = '999px';        // extremidades totalmente arredondadas
+    prog.shell.style.overflow = 'hidden';           // garante que a barra interna respeite o raio
+    prog.shell.style.background = '#eee';
+    prog.shell.style.boxSizing = 'border-box';
+
+    prog.bar.style.height = '100%';
+    prog.bar.style.width = prog.bar.style.width || '0%';
+    prog.bar.style.borderRadius = '999px';          // mantém a barra interna arredondada
+    prog.bar.style.transition = 'width .32s ease';
+    prog.bar.style.background = 'linear-gradient(90deg,#3fa5ff,#7ac0ff 60%)';
+    prog.bar.style.transformOrigin = 'left center';
+    prog.bar.style.display = 'block';
+  }
+
+  function showProgress() {
+    const prog = ensure();
+    normalize(prog);
+    prog.container.classList.add('visible');
+    prog.container.style.visibility = 'visible';
+    prog.container.style.opacity = '1';
+    prog.bar.style.width = '4%';
+    if (prog.num) prog.num.textContent = '0%';
+    void prog.container.offsetWidth;
+  }
+
+  function updateProgress(pct) {
+    const prog = ensure();
+    const v = Math.max(0, Math.min(100, Math.round(pct)));
+    normalize(prog);
+    prog.bar.style.setProperty('width', v + '%', 'important');
+    if (prog.num) prog.num.textContent = v + '%';
+  }
+
+  function hideProgress() {
+    const prog = ensure();
+    prog.bar.style.setProperty('width', '0%', 'important');
+    if (prog.num) prog.num.textContent = '0%';
+    setTimeout(() => {
+      prog.container.classList.remove('visible');
+      prog.container.style.visibility = 'hidden';
+    }, 300);
+  }
+
+  window.showProgress = showProgress;
+  window.updateProgress = updateProgress;
+  window.hideProgress = hideProgress;
+})();
+
+// Função que envia o HTML para gerar o PDF e fornece progresso simulado quando necessário
+async function uploadPdfPayload(html) {
+  showProgress();
+
+  let simulated = 0;
+  const simIv = setInterval(() => {
+    simulated = Math.min(95, simulated + Math.floor(Math.random() * 10) + 5);
+    updateProgress(simulated);
+  }, 300);
+
+  try {
+    const res = await fetch(ENDPOINT_PDF, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html })
+    });
+
+    clearInterval(simIv);
+
+    if (!res.ok) throw new Error('Erro no servidor: ' + res.status);
+
+    updateProgress(100);
+    return await res.blob();
+  } catch (err) {
+    clearInterval(simIv);
+    throw err;
+  }
+}
+
+// Handler do botão
 if (btn) {
   btn.addEventListener('click', async () => {
     try {
       if (typeof calculateTotals === 'function') calculateTotals();
-
       await new Promise(r => setTimeout(r, 120));
 
-      // Ler respostas dos sliders (q-row + range-wrap)
       let respostas = [];
       if (typeof window.getUserAnswers === 'function') {
         try { respostas = window.getUserAnswers(); } catch (e) { respostas = []; }
@@ -411,50 +518,28 @@ if (btn) {
         return;
       }
 
-      // Gerar HTML a partir das respostas
       const html = window.PrintReport && typeof window.PrintReport.extrairHtmlParaEnvio === 'function'
         ? window.PrintReport.extrairHtmlParaEnvio({ user: 'Jackson', project: 'Checklist' })
         : null;
 
       if (!html) throw new Error('PrintReport indisponível');
 
-      // UI: progresso
-      const container = document.getElementById('pdf-progress-container');
-      const bar = document.getElementById('pdf-progress-bar');
-      const num = document.getElementById('pdf-progress-num');
-      if (container && bar && num) {
-        container.style.display = 'block';
-        bar.style.width = '4%';
-        num.textContent = '0%';
-        bar.style.backgroundColor = '';
-      }
-
-      const resp = await fetch(ENDPOINT_PDF, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html })
-      });
-
-      if (!resp.ok) throw new Error('Erro no servidor: ' + resp.status);
-      if (bar && num) { bar.style.width = '40%'; num.textContent = '40%'; }
-
-      const blob = await resp.blob();
-      if (bar && num) { bar.style.width = '95%'; num.textContent = '95%'; }
+      const blob = await uploadPdfPayload(html);
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'Checklist.pdf';
+      a.download = 'document.pdf';
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
 
-      if (bar && num) { bar.style.width = '100%'; num.textContent = '100%'; }
-      setTimeout(() => { if (container) container.style.display = 'none'; }, 800);
     } catch (err) {
       console.error('Erro ao gerar PDF:', err);
       alert('Erro ao gerar PDF. Veja o console para detalhes.');
+    } finally {
+      hideProgress();
     }
   });
 }
@@ -470,3 +555,14 @@ function getUserAnswers() {
   });
 }
 window.getUserAnswers = getUserAnswers;
+
+// Função auxiliar setProgress (opcional)
+function setProgress(pct) {
+  const shell = document.querySelector('.progress-shell');
+  const bar = document.querySelector('.progress-bar');
+  const num = document.querySelector('.progress-num');
+  if (!shell || !bar) return;
+  const v = Math.max(0, Math.min(100, Math.round(pct)));
+  bar.style.width = v + '%';
+  if (num) num.textContent = v + '%';
+}

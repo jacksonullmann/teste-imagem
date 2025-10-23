@@ -98,7 +98,7 @@ input[type="range"]::-webkit-slider-thumb{
 .summary{color:var(--muted);margin-top:6px;font-size:0.92rem}
 
 /* actions */
-.actions{display:flex;gap:10px;margin-top:10px;padding-left: 10px;padding-right: 10px}
+.actions{display:flex;gap:10px;margin-top:20px;padding-left: 10px;padding-right: 10px}
 .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,0.03);color:var(--text)}
 .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#051126}
 .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04)}
@@ -371,3 +371,110 @@ input[type="range"]::-webkit-slider-thumb{
   .range-value { font-size: 14px; padding:5px 10px; }
 }
 
+/* Tamanhos utilitários */
+.btn-lg {
+  font-size: 1.125rem;       /* ~18px */
+  padding: 0.7rem 2.4rem;    /* vertical horizontal */
+  border-radius: 8px;
+  line-height: 1;
+  min-width: 120px;          /* touch target mínimo */
+  min-height: 44px;          /* recomendado para touch */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Aparência do botão primário (ajuste suave aos existentes) */
+.btn.primary,
+.btn.primary.btn-lg {
+  background-color: #0078d4;
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 6px rgba(3, 57, 108, 0.12);
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s;
+}
+
+/* Hover / active / focus */
+.btn.primary.btn-lg:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(3,57,108,0.14); }
+.btn.primary.btn-lg:active { transform: translateY(0); box-shadow: 0 3px 8px rgba(3,57,108,0.12); }
+.btn.primary.btn-lg:focus { outline: 3px solid rgba(0,120,212,0.18); outline-offset: 2px; }
+
+/* Variantes responsivas */
+@media (max-width: 480px) {
+  .btn-lg { font-size: 1rem; padding: 0.7rem 2rem; min-width: 100px; }
+}
+@media (min-width: 1200px) {
+  .btn-lg { font-size: 1.25rem; padding: 1rem 1.6rem; min-width: 140px; }
+}
+
+/* Contêiner (por padrão oculto até o clique) */
+#pdf-progress-container,
+.progress-container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  background: transparent;
+  position: relative;
+  z-index: 9999;
+  visibility: hidden;   /* oculto por padrão */
+  opacity: 0;
+  transition: opacity 200ms ease, visibility 200ms;
+}
+
+/* quando precisa ser visível, a classe .visible é aplicada pelo JS */
+#pdf-progress-container.visible,
+.progress-container.visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Shell com formato pill */
+#pdf-progress-container .progress-shell,
+.progress-shell {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: 12px;
+  background: #eee;
+  border-radius: 999px;
+  overflow: hidden;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+/* Barra interna arredondada */
+#pdf-progress-container .progress-bar,
+.progress-bar {
+  display: block;
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg,#3fa5ff,#7ac0ff 60%);
+  border-radius: 999px;
+  transition: width .32s ease;
+  transform-origin: left center;
+}
+
+/* Número opcional à direita */
+#pdf-progress-container .progress-num,
+.progress-num {
+  flex: 0 0 auto;
+  min-width: 44px;
+  text-align: right;
+  font-size: 13px;
+  color: #0092ff;
+  line-height: 1;
+}
+
+/* mobile adjustments */
+@media (max-width: 480px) {
+  
+  #pdf-progress-container .progress-shell,
+  .progress-shell { height: 8px; }
+}
